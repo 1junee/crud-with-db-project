@@ -8,7 +8,12 @@
 <body>
     <h1>{{  post.title  }}</h1>
     <li>{{  post.content  }}</li>
-    <a href="">수정</a>
+    <a href="/posts/{{ post.id  }}/edit">수정</a>
+
+    <form action="/posts/{{ post.id }}/delete" method="post">
+        <input type="submit" value="삭제">
+    </form>
+
     <a href="/posts">전체게시판</a>
 
 </body>

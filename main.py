@@ -8,13 +8,15 @@ DB_URL = "postgresql+psycopg://sd4:sd4@localhost:5432/board"
 # engine = create_engine(DB_URL)          # 기본: SQL 로그 출력 안 함
 engine = create_engine(DB_URL, echo=True)  # echo=True: 실행되는 SQL을 터미널에 출력 (학습용)
 
+# 모든 테이블 클래스의 공통 부모
 class Base(DeclarativeBase):
     pass
 
+# Post 클래스 = posts 테이블, Post 객체 하나 = 한 줄(row)
 class Post(Base):
     __tablename__ = 'posts'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)  # 기본키, DB가 자동 증가
     title: Mapped[str]
     content: Mapped[str]
 
@@ -27,6 +29,7 @@ def home():
     return {'test': 'home test'}
 
 
+# [R] 전체 목록
 @app.get('/posts')
 def posts_list(request: Request):
     with Session(engine) as db:
@@ -40,6 +43,7 @@ def posts_list(request: Request):
         )
 
 
+# [C-1] 작성 폼: DB 작업 없이 빈 form만 보여줌
 @app.get('/posts/new')
 def post_new(request: Request):
     return templates.TemplateResponse(
@@ -48,6 +52,7 @@ def post_new(request: Request):
     )
 
 
+# [C-2] 생성 → 저장 후 새 글 상세로 redirect
 @app.post('/posts/create')
 def post_create(title: str = Form(), content: str = Form()):
     # form에서 받은 title, content로 DB에 새 글 저장 (INSERT)
@@ -68,6 +73,55 @@ def post_create(title: str = Form(), content: str = Form()):
     return RedirectResponse(f'/posts/{new_id}', status_code=303)
 
 
+# [U-1] 수정 폼: 기존 글을 꺼내서 form에 채워 보여줌
+@app.get('/posts/{post_id}/edit')
+def post_edit(request: Request, post_id: int):
+    with Session(engine) as db:
+        post = db.get(Post, post_id)
+
+    # 세션 밖이지만 post는 이미 읽어온 값이라 검사·사용 가능
+    if post is None:
+        raise HTTPException(status_code=404, detail='게시물이 존재하지 않습니다.')
+
+    return templates.TemplateResponse(
+        request=request,
+        name='edit.html',
+        context={'post': post}
+    )       
+
+
+# [U-2] 수정 → 저장 후 상세로 redirect
+# post_id는 주소에서, title·content는 form 본문(Form)에서 받음
+@app.post('/posts/{post_id}/update')
+def post_update(post_id: int, title: str = Form(), content: str = Form()):
+    with Session(engine) as db:
+        old_post = db.get(Post, post_id)
+        # ⚠️ 없는 글이면 None → 아래 줄에서 AttributeError(500), None 검사 필요
+        # 객체 속성만 바꾸고 commit하면 바뀐 컬럼만 UPDATE
+        old_post.title = title
+        old_post.content = content
+        db.commit()
+
+    return RedirectResponse(f'/posts/{post_id}', status_code=303)
+
+
+# [D] 삭제 → 글이 없어졌으니 목록으로 redirect
+@app.post('/posts/{post_id}/delete')
+# post_id는 주소({post_id})에서 오는 경로 변수 → Form() 붙이면 에러
+# Form()은 form 본문(<input name="...">)으로 오는 값에만 사용
+def post_delete(post_id: int):
+    with Session(engine) as db:
+        post = db.get(Post, post_id)
+        if post is None:
+            raise HTTPException(status_code=404, detail='게시물이 존재하지 않습니다.')
+        # D: delete 후 commit
+        db.delete(post)
+        db.commit()
+
+    return RedirectResponse('/posts', status_code=303)
+
+
+# [R] 상세
 # 라우트는 위에서부터 순서대로 주소를 맞춰봄
 # 이 함수가 '/posts/new'보다 위에 있으면 'new'를 post_id로 받으려다 에러(422) → 그래서 아래에 둠
 @app.get('/posts/{post_id}')
