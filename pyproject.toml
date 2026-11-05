@@ -2,4 +2,8 @@
 name = "crud-with-db"
 version = "0.1.0"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "fastapi[standard]>=0.162.0",
+    "psycopg[binary]>=3.3.8",
+    "sqlalchemy>=2.1.8",
+]
