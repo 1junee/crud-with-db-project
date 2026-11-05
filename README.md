@@ -16,9 +16,37 @@ uv init crud_with_db --bare --python 3.14
 
 
 ```
-uv add "fastapi[standard]" sqlalchemy "
-psycopg[binary]"
+uv add "fastapi[standard]" sqlalchemy "psycopg[binary]"
 ```
+
+- 테이블 생성 + 초기 데이터 (`schema.sql`)
+```
+psql -U sd4 -d board -f schema.sql
+```
+
+## run server
+```
+uv run fastapi dev
+```
+
+- DB 연결 / ORM 확인용 (실행 후 `>>>`에서 db, Post 직접 사용)
+```
+uv run python -i db_check.py
+```
+
+## 라우트
+
+| 기능 | 메서드 | 주소 | 이동 |
+|---|---|---|---|
+| 목록 (R) | GET | `/posts` | list.html |
+| 작성 폼 | GET | `/posts/new` | new.html |
+| 생성 (C) | POST | `/posts/create` | → `/posts/{id}` |
+| 상세 (R) | GET | `/posts/{id}` | detail.html (없으면 404) |
+| 수정 폼 | GET | `/posts/{id}/edit` | edit.html |
+| 수정 (U) | POST | `/posts/{id}/update` | → `/posts/{id}` |
+| 삭제 (D) | POST | `/posts/{id}/delete` | → `/posts` |
+
+- `/posts/{id}` 상세 라우트는 `/posts/new`보다 아래에 둬야 함 (위에 있으면 `new`를 id로 받으려다 422)
 
 ## ORM vs SQL
 
@@ -54,7 +82,7 @@ db.commit()
 #  {'title': 'test', 'content': 'test content'}
 ```
 
-- update
+- UPDATE
 ```
 post = db.get(Post, 1)      # 먼저 꺼내고
 post.title = 'new title'    # 속성만 바꾸면
@@ -63,7 +91,7 @@ db.commit()                 # commit 때 바뀐 컬럼만 UPDATE
 => UPDATE posts SET title=%(title)s::VARCHAR WHERE posts.id = %(posts_id)s::INTEGER
 ```
 
-- delete
+- DELETE
 ```
 post = db.get(Post, 1)
 db.delete(post)
@@ -84,4 +112,5 @@ db.commit()
 
 - `commit()`을 해야 실제로 DB에 저장됨 (안 하면 with문 끝날 때 ROLLBACK)
 - update / delete는 ORM이 `WHERE id = ...`를 자동으로 붙여 줌 (SQL로 직접 쓸 땐 WHERE 빠뜨리면 전체가 바뀜)
+- `db.get()`은 없는 id면 `None` → 상세/수정/삭제 전에 `None` 검사 후 404 (`HTTPException`)
 

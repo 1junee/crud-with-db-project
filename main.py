@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request, HTTPException, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 
+# 지금은 로컬 -> 실제 서비스에 사용하려면?
 DB_URL = "postgresql+psycopg://sd4:sd4@localhost:5432/board"
 # engine = create_engine(DB_URL)          # 기본: SQL 로그 출력 안 함
 engine = create_engine(DB_URL, echo=True)  # echo=True: 실행되는 SQL을 터미널에 출력 (학습용)
@@ -96,7 +97,8 @@ def post_edit(request: Request, post_id: int):
 def post_update(post_id: int, title: str = Form(), content: str = Form()):
     with Session(engine) as db:
         old_post = db.get(Post, post_id)
-        # ⚠️ 없는 글이면 None → 아래 줄에서 AttributeError(500), None 검사 필요
+        if old_post is None:
+            raise HTTPException(status_code=404, detail='게시물이 존재하지 않습니다.') 
         # 객체 속성만 바꾸고 commit하면 바뀐 컬럼만 UPDATE
         old_post.title = title
         old_post.content = content
