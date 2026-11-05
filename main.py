@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 
@@ -40,6 +40,36 @@ def posts_list(request: Request):
         )
 
 
+@app.get('/posts/new')
+def post_new(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name='new.html',
+    )
+
+
+@app.post('/posts/create')
+def post_create(title: str = Form(), content: str = Form()):
+    # form에서 받은 title, content로 DB에 새 글 저장 (INSERT)
+    # with문이 끝나면 세션이 닫힘 (에러가 나도 자동으로 닫힘)
+    with Session(engine) as db:
+        # C: 객체 만들고 add → commit 해야 실제 저장
+        post = Post(title=title, content=content)
+        # print('add 전:', post.id)
+        # add 전: None → 아직 파이썬 객체일 뿐, DB와 무관
+        db.add(post)
+        # print('add 후:', post.id)
+        # add 후: None → 세션에 '저장 예정'으로 등록만 됨 (INSERT는 아직 안 나감)
+        db.commit()
+        # print('commit 후:', post.id)
+        # commit 후: 8 → commit 때 INSERT가 실행되고, DB가 자동으로 만든 id를 받아옴
+        # 세션이 닫히기 전에 id를 변수에 꺼내둠 (redirect 주소에 사용)
+        new_id = post.id
+    return RedirectResponse(f'/posts/{new_id}', status_code=303)
+
+
+# 라우트는 위에서부터 순서대로 주소를 맞춰봄
+# 이 함수가 '/posts/new'보다 위에 있으면 'new'를 post_id로 받으려다 에러(422) → 그래서 아래에 둠
 @app.get('/posts/{post_id}')
 def post_detail(post_id: int, request: Request):
     with Session(engine) as db:
@@ -47,14 +77,18 @@ def post_detail(post_id: int, request: Request):
         # 조회 결과(post 객체)는 세션이 닫혀도 파이썬 변수로 남아 있어서 with 밖에서도 사용 가능
         # with 문이 끝나면 세션(DB 연결)이 닫힘 → db 변수 이름은 남지만 더 이상 DB 작업은 못 함
         post = db.get(Post, post_id) 
-        # 100번 게시물 접근하려 할 떄 None 반환 -> 에러 없이 작동은 됨 -> 예외 처리 필요
+        # 100번 게시물 접근하려 할 때 None 반환 -> 에러 없이 작동은 됨 -> 예외 처리 필요
         # print(post)
         if post is None:
-            return RedirectResponse('/posts', status_code=303)
+            # 방법 1) 목록으로 돌려보내기 (사용자는 왜 이동했는지 모름)
+            # return RedirectResponse('/posts', status_code=303)
+            # 방법 2) 404 에러 응답 → {"detail": "게시물이 존재하지 않습니다."} JSON으로 보임
+            raise HTTPException(status_code=404, detail='게시물이 존재하지 않습니다.')
+            # 방법 3) 에러 안내용 HTML 페이지 보여주기 (cafe-api의 error_page 방식)
+            # return templates.TemplateResponse(에러페이지로)
 
     return templates.TemplateResponse(
         request=request,
         name='detail.html',
         context={'post': post}
     )
-
