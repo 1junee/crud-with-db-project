@@ -36,7 +36,7 @@ psql -U sd4 -d board
 ### 2. uv 프로젝트 생성
 
 ```bash
-uv init crud_with_db --bare --python 3.14
+uv init crud-with-db --bare --python 3.14
 uv add "fastapi[standard]" sqlalchemy "psycopg[binary]"
 ```
 
@@ -76,6 +76,48 @@ uv run python -i db_check.py
 | 삭제 (D) | `POST` | `/posts/{id}/delete` | → `/posts` |
 
 > ⚠️ `/posts/{id}` 상세 라우트는 `/posts/new`보다 **아래**에 둬야 함 (위에 있으면 `new`를 id로 받으려다 422)
+
+<br>
+
+## 🧩 SQLAlchemy 핵심 정리
+
+### ORM이란
+
+- 테이블 = 클래스, 한 줄(row) = 객체로 다루게 해주는 도구 (SQL을 대신 만들어 줌)
+- 장점: 파이썬 문법, 자동완성, SQL 인젝션 방지, DB 종류 바꾸기 쉬움
+- 단점: 어떤 SQL이 나가는지 안 보임 → `echo=True`로 확인, 복잡한 쿼리는 SQL 직접이 나을 때도 있음
+
+### 구성 요소
+
+| 이름 | 역할 |
+|---|---|
+| `psycopg` | PostgreSQL과 실제로 통신하는 드라이버 |
+| `create_engine` | DB 연결 통로(engine) 생성, 앱에서 **한 번만** (실제 접속은 처음 쓸 때) |
+| `DeclarativeBase` | 테이블 클래스들의 공통 부모 |
+| `Mapped`, `mapped_column` | 컬럼 정의 (`Mapped[str]` → NOT NULL 문자열, `primary_key=True` → 기본키) |
+| `Session` | DB 작업 단위, 요청마다 `with Session(engine) as db:`로 열고 닫음 |
+
+### 접속 주소
+
+```
+dialect+driver://username:password@host:port/database
+postgresql+psycopg://sd4:sd4@localhost:5432/board
+```
+
+- `+psycopg` 생략하면 기본 드라이버 psycopg2를 찾음 → 설치 안 돼 있으면 에러
+- 비밀번호에 특수문자(`@`, `/` 등)가 있으면 `URL.create()` 사용
+- `echo=True`: SQL 출력 / `echo="debug"`: 결과 행까지 출력
+
+### 객체가 DB에 저장되는 흐름
+
+```python
+post = Post(title='t', content='c')   # id=None, 파이썬 객체일 뿐
+db.add(post)                          # id=None, 세션에 '저장 예정'으로 등록
+db.commit()                           # INSERT 실행 → DB가 만든 id 받아옴
+```
+
+- `with` 블록이 끝나면 세션이 닫힘, 이미 읽어온 객체 값은 밖에서도 사용 가능
+- `commit()` 없이 끝나면 ROLLBACK (조회만 했을 때 로그에 찍히는 ROLLBACK은 정상)
 
 <br>
 
