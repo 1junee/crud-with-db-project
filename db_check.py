@@ -36,3 +36,23 @@ with Session(engine) as db:
     # 한 줄(row)을 객체 속성처럼 꺼내 씀 → 이게 ORM
     for post in posts:
         print(post.id, post.title, post.content)
+
+    # 아래 CRUD는 터미널에서 대화형으로 직접 해볼 수 있음
+    # $ uv run python -i db_check.py   (-i: 실행 후 >>> 프롬프트로 남아서 db, Post 등 바로 사용)
+
+    # C: 객체 만들고 add → commit 해야 실제 저장
+    post = Post(title='test', content='test content')
+    db.add(post)
+    db.commit()
+
+    # R (하나): 기본키로 조회, 없으면 None
+    post = db.get(Post, post.id)
+    print(post.id, post.title)
+
+    # U: 속성만 바꾸고 commit
+    post.title = 'update test'
+    db.commit()
+
+    # D: delete 후 commit
+    db.delete(post)
+    db.commit()
