@@ -2,6 +2,7 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, Session
 from fastapi import FastAPI, Request, HTTPException, Form
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 
 # 지금은 로컬 -> 실제 서비스에 사용하려면?
@@ -23,6 +24,8 @@ class Post(Base):
 
 app = FastAPI()
 templates = Jinja2Templates(directory='templates')
+# static 폴더(CSS 등)를 /static 주소로 제공 → base.html이 /static/css/board.css를 불러옴
+app.mount('/static', StaticFiles(directory='static'), name='static')
 
 
 @app.get('/')

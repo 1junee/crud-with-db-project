@@ -1,0 +1,246 @@
+/* 게시판 공통 스타일 (규칙: design/DESIGN.md)
+   Bootstrap 5.3 다음에 불러와서 Bootstrap 기본값을 덮어쓴다. */
+
+/* ───────────── 색 변수 ───────────── */
+:root {
+    --bg: #f8f9fa;        /* 페이지 배경 */
+    --card: #ffffff;      /* 카드 배경 */
+    --text: #212529;      /* 제목, 기본 버튼, 선택된 탭 */
+    --sub: #495057;       /* 본문 글자 */
+    --muted: #868e96;     /* 보조 글자 */
+    --line: #f1f3f5;      /* 카드 안 구분선, 아바타 배경 */
+    --border: #dee2e6;    /* 입력칸·보조 버튼 테두리 */
+
+    /* Bootstrap 기본 변수를 우리 색·글꼴로 연결 */
+    --bs-body-bg: var(--bg);
+    --bs-body-color: var(--text);
+    --bs-secondary-color: var(--muted);
+    --bs-border-color: var(--border);
+    --bs-body-font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+}
+
+body { -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; }
+a:hover { color: inherit; }
+
+/* 콘텐츠 1024px + 좌우 여백 16px */
+.wrap {
+    max-width: 1056px;
+    margin: 0 auto;
+    padding: 0 16px 64px;
+}
+
+/* ───────────── 상단 바 ───────────── */
+.topbar { height: 64px; }
+.logo {
+    font-family: "Menlo", "Consolas", monospace;
+    font-size: 22px;
+    letter-spacing: 0.02em;
+}
+
+/* ───────────── 버튼 (Bootstrap .btn 덮어쓰기) ───────────── */
+.btn {
+    --bs-btn-padding-x: 16px;
+    --bs-btn-padding-y: 0;
+    --bs-btn-font-size: 15px;
+    --bs-btn-font-weight: 700;
+    --bs-btn-line-height: 1;
+    --bs-btn-border-radius: 999px;          /* 알약 모양 */
+    --bs-btn-focus-box-shadow: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+}
+/* 주요 버튼: 화면에 하나만 */
+.btn-primary {
+    --bs-btn-color: var(--card);
+    --bs-btn-bg: var(--text);
+    --bs-btn-border-color: var(--text);
+    --bs-btn-hover-color: var(--card);
+    --bs-btn-hover-bg: var(--sub);
+    --bs-btn-hover-border-color: var(--sub);
+    --bs-btn-active-color: var(--card);
+    --bs-btn-active-bg: var(--sub);
+    --bs-btn-active-border-color: var(--sub);
+}
+/* 보조 버튼: 흰 바탕 + 테두리 (수정, 삭제) */
+.btn-ghost {
+    --bs-btn-color: var(--sub);
+    --bs-btn-bg: var(--card);
+    --bs-btn-border-color: var(--border);
+    --bs-btn-hover-color: var(--text);
+    --bs-btn-hover-bg: var(--card);
+    --bs-btn-hover-border-color: var(--text);
+    --bs-btn-active-color: var(--text);
+    --bs-btn-active-bg: var(--card);
+    --bs-btn-active-border-color: var(--text);
+}
+/* 글자만 있는 버튼 (취소, 목록) */
+.btn-text {
+    --bs-btn-padding-x: 8px;
+    --bs-btn-color: var(--muted);
+    --bs-btn-hover-color: var(--text);
+    --bs-btn-active-color: var(--text);
+    --bs-btn-border-color: transparent;
+    --bs-btn-hover-border-color: transparent;
+    --bs-btn-active-border-color: transparent;
+}
+
+/* ───────────── 탭 줄 ───────────── */
+.tabs { margin: 24px 0 32px; }
+.tab {
+    gap: 8px;
+    width: 112px;
+    height: 48px;
+    font-size: 18px;
+    line-height: 1;
+}
+.tab.active {
+    font-weight: 700;
+    border-bottom: 2px solid var(--text);
+}
+.tab .count { color: var(--muted); font-weight: 400; }
+
+/* ───────────── 카드 그리드 (목록) ───────────── */
+.post-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));   /* minmax(0,…): 긴 제목이 칸을 늘리지 못하게 */
+    gap: 32px;
+}
+@media (max-width: 1024px) { .post-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px)  { .post-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; } }
+
+/* ───────────── 카드 (Bootstrap .card 덮어쓰기) ───────────── */
+.card {
+    --bs-card-border-width: 0;
+    --bs-card-border-radius: 4px;
+    --bs-card-inner-border-radius: 4px;
+    --bs-card-bg: var(--card);
+    --bs-card-spacer-x: 16px;
+    --bs-card-spacer-y: 16px;
+    --bs-card-cap-padding-x: 16px;
+    --bs-card-cap-padding-y: 10px;
+    --bs-card-cap-bg: transparent;
+    --bs-card-title-spacer-y: 4px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .04);
+}
+/* 목록 카드: 높이 고정 + 마우스 올리면 떠오름 */
+.post-card {
+    height: 100%;
+    min-height: 380px;
+    overflow: hidden;
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+.post-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 20px rgba(0, 0, 0, .08);
+}
+.post-card .card-body { display: flex; flex-direction: column; }   /* 보조 정보 줄을 바닥으로 */
+.post-card .card-title {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+.post-card .card-text {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--sub);
+    word-break: break-all;
+    /* 썸네일 없는 카드 → 6줄까지 */
+    display: -webkit-box;
+    -webkit-line-clamp: 6;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.post-card .card-meta {
+    margin: auto 0 0;            /* 본문 영역 맨 아래에 붙임 */
+    padding-top: 16px;
+    font-size: 12px;
+    color: var(--muted);
+}
+.post-card .card-footer {
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--muted);
+}
+.post-card .card-footer b { color: var(--text); }
+.avatar {
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+    background: var(--line);
+    color: var(--sub);
+    font-size: 12px;
+    font-weight: 700;
+}
+.read { transition: color .15s; }
+.post-card:hover .read { color: var(--text); }
+
+/* 글이 없을 때 */
+.empty {
+    grid-column: 1 / -1;       /* 그리드 한 줄 전체 */
+    padding: 96px 0;
+    color: var(--muted);
+}
+.empty p { margin: 0 0 20px; font-size: 16px; }
+
+/* ───────────── 단독 카드 (상세·작성·수정) ───────────── */
+.panel {
+    max-width: 768px;
+    margin: 24px auto 0;
+}
+.panel > .card-body { --bs-card-spacer-x: 32px; --bs-card-spacer-y: 32px; }
+.panel > .card-footer {
+    --bs-card-cap-padding-x: 32px;
+    --bs-card-cap-padding-y: 16px;
+    border-top: 1px solid var(--line);
+}
+@media (max-width: 640px) {
+    .panel > .card-body { --bs-card-spacer-x: 16px; --bs-card-spacer-y: 24px; }
+    .panel > .card-footer { --bs-card-cap-padding-x: 16px; --bs-card-cap-padding-y: 12px; }
+}
+
+/* 페이지 제목 */
+.page-title {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.4;
+    word-break: break-all;
+}
+.meta { margin: 8px 0 0; font-size: 12px; color: var(--muted); }
+
+/* 상세 본문 */
+.content {
+    margin-top: 32px;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+    font-size: 16px;
+    line-height: 1.8;
+    color: var(--sub);
+    white-space: pre-wrap;     /* 작성할 때 넣은 줄바꿈 그대로 */
+    word-break: break-all;
+}
+
+/* ───────────── 입력칸 (Bootstrap .form-control 덮어쓰기) ───────────── */
+.form-label {
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 700;
+}
+.form-control {
+    padding: 12px 16px;
+    border-color: var(--border);
+    border-radius: 4px;
+    background: var(--card);
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.6;
+}
+.form-control:focus {
+    border-color: var(--text);   /* 입력 중인 칸 강조 */
+    box-shadow: none;
+}
+.form-control::placeholder { color: var(--muted); }
+textarea.form-control { min-height: 320px; resize: vertical; }   /* 세로로만 크기 조절 */

@@ -1,20 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>게시판</h1>
-    <a href="/posts/new">글쓰기</a>
-    <ul>
-    {% for post in posts %}
-        <li>
-            {{ post.title }}
-            <a href="/posts/{{post.id}}">detial</a>
-        </li>
-    {% endfor %}
-    </ul>
-</body>
-</html>
+{% extends 'base.html' %}
+{# extends: base.html 틀을 그대로 쓰고, block 부분만 채움 #}
+
+{% block content %}
+        <nav class="tabs d-flex">
+            <a class="tab active d-flex align-items-center justify-content-center" href="/posts">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                    <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+                </svg>
+                전체 <span class="count">{{ posts|length }}</span>
+            </a>
+        </nav>
+
+        <ul class="post-grid list-unstyled m-0">
+        {% for post in posts %}
+            <li>
+                <!-- 카드 전체가 링크 → 어디를 눌러도 상세 페이지로 -->
+                <a class="card post-card" href="/posts/{{ post.id }}">
+                    <div class="card-body">
+                        <h2 class="card-title text-truncate">{{ post.title }}</h2>
+                        <p class="card-text mb-0">{{ post.content|truncate(200) }}</p>
+                        <p class="card-meta">본문 {{ post.content|length }}자</p>
+                    </div>
+                    <div class="card-footer d-flex justify-content-between align-items-center">
+                        <span class="d-flex align-items-center"><span class="avatar d-inline-flex align-items-center justify-content-center rounded-circle" aria-hidden="true">{{ post.title[:1] }}</span>No.&nbsp;<b>{{ '%02d'|format(post.id) }}</b></span>
+                        <span class="read">읽기 →</span>
+                    </div>
+                </a>
+            </li>
+        {% else %}
+            <!-- for ~ else: posts가 비어 있으면 실행 -->
+            <li class="empty text-center">
+                <p>아직 작성된 글이 없습니다.</p>
+                <a class="btn btn-primary" href="/posts/new">첫 글 쓰기</a>
+            </li>
+        {% endfor %}
+        </ul>
+{% endblock %}
